@@ -1,6 +1,6 @@
 {
   "name": "exui",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Small lib for small ui framework.",
   "main": "bin/index",
   "typings":"bin/index",
