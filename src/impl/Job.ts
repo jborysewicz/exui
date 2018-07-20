@@ -21,14 +21,32 @@ export class JobImpl implements Job {
         return view;
     }
 
-    setAsCurrent(view: View): void {
-        if (this.views.indexOf(view) == -1) {
-            throw new Error("View doesn't belongs to the job.");
+    removeView(view: View): void {
+        this.checkForAbsence(view);
+
+        const viewIndex = this.views.indexOf(view);
+        this.views.splice(viewIndex, 1);
+        if (!this.delegate.plaftormWillCloseView || this.delegate.plaftormWillCloseView(view)) {
+            this.delegate.plaftormDidCloseView(view);
         }
+
+        if (viewIndex > 0) {
+            this.setAsCurrent(this.views[viewIndex - 1])
+        }
+    }
+
+    setAsCurrent(view: View): void {
+        this.checkForAbsence(view);
 
         this.currentView = view;
         if (!this.delegate.plaftormWillSwitchView || this.delegate.plaftormWillSwitchView(view)) {
             this.delegate.platformDidSwitchView(view);
+        }
+    }
+
+    private checkForAbsence(view: View): void {
+        if (this.views.indexOf(view) == -1) {
+            throw new Error("View doesn't belongs to the job.");
         }
     }
 }

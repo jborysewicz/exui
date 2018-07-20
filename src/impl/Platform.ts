@@ -1,21 +1,32 @@
 import { JobImpl } from "./Job";
 import { ActionManagerImpl } from "./ActionManager";
-import { Platform, Job, PlatformDataSource, PlatformDelegate, Action } from "../Model";
+import { Platform, Job, PlatformDataSource, PlatformDelegate, Action, ActionManager } from "../Model";
 
-export class DefaultPlatform implements Platform {
+let platform: Platform;
+let actionManager: ActionManager;
+let platformHook: PlatformHook;
+
+export function registerPlatformHook(hook: () => PlatformHook) {
+    if (platformHook) {
+        throw new Error(`Platform already initialized`);
+    }
+    const result = hook();
+
+    platform = new DefaultPlatform(result.dataSource, result.delegate);
+    actionManager = new ActionManagerImpl(result.dataSource.rootAction, {
+        get context() {
+            return platform.context
+        }
+    });
+}
+
+class DefaultPlatform implements Platform {
 
     private _currentJob: Job;
     public jobs: Job[] = [];
 
-    actionManager: ActionManagerImpl;
-
     constructor(private dataSource: PlatformDataSource, private delegate: PlatformDelegate) {
-        this.setupActions();
         this.bootsrap();
-    }
-
-    setupActions(): any {
-        this.actionManager = new ActionManagerImpl(this.dataSource.rootAction, this);
     }
 
     bootsrap(): any {
@@ -41,14 +52,36 @@ export class DefaultPlatform implements Platform {
         this.delegate.platformDidSwitchJob(job);
     }
 
-    execute(action: Action): void {
-        const executionContext = action.execute(this.currentJob.context, this);
-        this.currentJob.context = { ... this.currentJob.context, ...executionContext }
+    execute(actionName: string, context?: any): void {
+        const action = actionManager.findActionByFlatName(actionName);
+        if (action == null) {
+            throw new Error(`Action for name: ${actionName} is unavailable`);
+        }
+
+        const executionContext = action.execute({ ...this.currentJob.context, ...context });
+        this.currentJob.context = { ...this.currentJob.context, ...executionContext }
+        console.log(this.currentJob.context);
+        
     }
 
     openViewSwitcher(): void {
         if (!this.delegate.platformWillOpenViewSwitcher || this.delegate.platformWillOpenViewSwitcher()) {
             this.delegate.openViewSwitcher();
         }
+    }
+}
+export interface PlatformHook {
+    dataSource: PlatformDataSource,
+    delegate: PlatformDelegate
+}
+
+export const exui = {
+
+    get platform() {
+        return platform
+    },
+
+    get actionManager() {
+        return actionManager
     }
 }

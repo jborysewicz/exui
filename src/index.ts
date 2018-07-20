@@ -1,2 +1,2 @@
 export * from "./Model"
-export { DefaultPlatform } from "./impl/Platform"
+export { registerPlatformHook, exui } from "./impl/Platform"

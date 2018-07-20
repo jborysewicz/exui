@@ -1,4 +1,4 @@
-import { ActionManager, Action, ContextDataSource, Platform, SearchResult } from "../Model";
+import { ActionManager, Action, ContextDataSource, SearchResult } from "../Model";
 
 export class ActionManagerImpl implements ActionManager {
 
@@ -27,9 +27,9 @@ export class ActionManagerImpl implements ActionManager {
                 childActions = childActions.map(child => {
                     return {
                         name: action.name.concat(".").concat(child.name).toLowerCase(),
-                        execute: (context: any, platform: Platform) => {
-                            const childContext = child.execute ? child.execute(context, platform) : context;
-                            return action.execute(childContext, platform);
+                        execute: (context: any) => {
+                            const childContext = child.execute ? child.execute(context) : context;
+                            return action.execute(childContext);
                         },
                         matchesContext: child.matchesContext
                     }
@@ -103,9 +103,9 @@ export class ActionManagerImpl implements ActionManager {
 
         let results: SearchResult[] = [];
         const appender = (searchResult: SearchResult) => {
-            console.log(searchResult);
-
-            results.push(searchResult);
+            if (searchResult.action.isSearchable) {
+                results.push(searchResult);
+            }
         }
         this.flatActions.forEach(fa => { deepSearch(fa, phrase, appender) })
         results = results.sort((p, n) => {

@@ -1,8 +1,9 @@
 export interface Action {
     name: string
-    execute?(context?: any, platform?: Platform): any
+    execute?(context?: any): any
     matchesContext?(context: any): boolean
-    leafs?: Action[]
+    leafs?: Action[],
+    isSearchable?: boolean
 }
 
 export interface Platform {
@@ -14,10 +15,8 @@ export interface Platform {
     createJob(): Job;
     setAsCurrent(job: Job): void;
 
-    execute(action: Action): void;
+    execute(actionName: string, context?: any): void;
     openViewSwitcher(): void
-
-    actionManager: ActionManager;
 }
 
 export interface Job {
@@ -28,7 +27,7 @@ export interface Job {
 
     addView(component: any): View;
     setAsCurrent(view: View): void;
-    // removeView(view: ExecutionResult<T>): void;
+    removeView(view: View): void;
 }
 
 export interface View {
@@ -63,6 +62,9 @@ export interface PlatformDelegate {
 
     plaftormWillSwitchView?(view: View): boolean;
     platformDidSwitchView(view: View): void;
+
+    plaftormWillCloseView?(view: View): boolean;
+    plaftormDidCloseView(view: View): void;
 
     platformWillOpenViewSwitcher?(): boolean;
     openViewSwitcher(): void;
