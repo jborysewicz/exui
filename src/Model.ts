@@ -1,9 +1,14 @@
 export interface Action {
     name: string
-    execute?(context?: any): any
+    execute?(context?: any): Promise<any>
     matchesContext?(context: any): boolean
     leafs?: Action[],
     isSearchable?: boolean
+}
+
+export interface ContextSource {
+    job: any,
+    view: any
 }
 
 export interface Platform {
@@ -15,8 +20,8 @@ export interface Platform {
     createJob(): Job;
     setAsCurrent(job: Job): void;
 
-    execute(actionName: string, context?: any): void;
-    openViewSwitcher(): void
+    execute(actionName: string, context?: any): Promise<any>;
+    openViewSwitcher(direction?: SwitchDirection): void
 }
 
 export interface Job {
@@ -25,14 +30,18 @@ export interface Job {
     context?: any;
     currentView: View;
 
-    addView(component: any): View;
+    pushView(component: any): View;
     setAsCurrent(view: View): void;
-    removeView(view: View): void;
+    popView(): void;
 }
 
 export interface View {
     name: string,
     component: any
+}
+
+export interface ContextProvider {
+    updateContext(currentContext: any): any
 }
 
 export interface SearchResult {
@@ -53,6 +62,13 @@ export interface PlatformDataSource extends ContextDataSource {
     rootAction: Action;
 }
 
+export enum SwitchDirection {
+    NextJob = 40,
+    PreviousJob = 38,
+    NextView = 39,
+    PreviousView = 37
+}
+
 export interface PlatformDelegate {
 
     createNewView(id: string, context: any, component: any): View;
@@ -67,5 +83,5 @@ export interface PlatformDelegate {
     plaftormDidCloseView(view: View): void;
 
     platformWillOpenViewSwitcher?(): boolean;
-    openViewSwitcher(): void;
+    openViewSwitcher(direction?: SwitchDirection): void;
 }

@@ -1,6 +1,6 @@
 import { JobImpl } from "./Job";
 import { ActionManagerImpl } from "./ActionManager";
-import { Platform, Job, PlatformDataSource, PlatformDelegate, Action, ActionManager } from "../Model";
+import { Platform, Job, PlatformDataSource, PlatformDelegate, Action, ActionManager, SwitchDirection } from "../Model";
 
 let platform: Platform;
 let actionManager: ActionManager;
@@ -52,21 +52,21 @@ class DefaultPlatform implements Platform {
         this.delegate.platformDidSwitchJob(job);
     }
 
-    execute(actionName: string, context?: any): void {
+    async execute(actionName: string, context?: any): Promise<any> {
         const action = actionManager.findActionByFlatName(actionName);
         if (action == null) {
             throw new Error(`Action for name: ${actionName} is unavailable`);
         }
 
-        const executionContext = action.execute({ ...this.currentJob.context, ...context });
+        const executionContext = await action.execute({ ...this.currentJob.context, ...context });
         this.currentJob.context = { ...this.currentJob.context, ...executionContext }
         console.log(this.currentJob.context);
-        
+        return executionContext;
     }
 
-    openViewSwitcher(): void {
+    openViewSwitcher(direction?: SwitchDirection): void {
         if (!this.delegate.platformWillOpenViewSwitcher || this.delegate.platformWillOpenViewSwitcher()) {
-            this.delegate.openViewSwitcher();
+            this.delegate.openViewSwitcher(direction);
         }
     }
 }

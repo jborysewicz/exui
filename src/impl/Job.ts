@@ -4,8 +4,8 @@ export class JobImpl implements Job {
 
     id: string;
     context: any = {};
-    views: any[] = [];
     currentView: View;
+    private _views: any[] = [];
 
     constructor(private delegate: PlatformDelegate) {
         this.id = "job" + this.generateQuickGuid() + "_";
@@ -15,23 +15,24 @@ export class JobImpl implements Job {
         return Math.random().toString(36).substring(2, 15);
     }
 
-    addView(component: any): View {
+    get views(): View[] {
+        return [...this._views];
+    }
+
+    pushView(component: any): View {
         const view = this.delegate.createNewView(this.generateQuickGuid(), this.context, component);
-        this.views.push(view);
+        this._views.push(view);
         return view;
     }
 
-    removeView(view: View): void {
-        this.checkForAbsence(view);
-
-        const viewIndex = this.views.indexOf(view);
-        this.views.splice(viewIndex, 1);
-        if (!this.delegate.plaftormWillCloseView || this.delegate.plaftormWillCloseView(view)) {
-            this.delegate.plaftormDidCloseView(view);
-        }
-
-        if (viewIndex > 0) {
-            this.setAsCurrent(this.views[viewIndex - 1])
+    popView(): void {
+        const viewIndex = this._views.indexOf(this.currentView);
+        this._views.splice(viewIndex, 1);
+        if (!this.delegate.plaftormWillCloseView || this.delegate.plaftormWillCloseView(this.currentView)) {
+            this.delegate.plaftormDidCloseView(this.currentView);
+            if (viewIndex > 0) {
+                this.setAsCurrent(this._views[viewIndex - 1])
+            }
         }
     }
 

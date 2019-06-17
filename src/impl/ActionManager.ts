@@ -27,11 +27,12 @@ export class ActionManagerImpl implements ActionManager {
                 childActions = childActions.map(child => {
                     return {
                         name: action.name.concat(".").concat(child.name).toLowerCase(),
-                        execute: (context: any) => {
-                            const childContext = child.execute ? child.execute(context) : context;
-                            return action.execute(childContext);
+                        execute: async (context: any) => {
+                            const childContext = child.execute ? await child.execute(context) : context;
+                            return await (!!action.execute ? action.execute(childContext) : childContext)
                         },
-                        matchesContext: child.matchesContext
+                        matchesContext: child.matchesContext,
+                        isSearchable: child.isSearchable || action.isSearchable
                     }
                 })
             } else {
